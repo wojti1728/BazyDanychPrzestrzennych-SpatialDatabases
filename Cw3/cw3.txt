@@ -1,0 +1,121 @@
+# zad 1
+CREATE DATABASE cw3;
+CREATE EXTENSION postgis;
+
+# Nastepnie w cmd
+shp2pgsql.exe "C:\Users\Wojtek\Desktop\cw3\T2019_KAR_GERMANY\T2019_KAR_BUILDINGS.shp" buildings_2019 | psql -p 5432 -h localhost -U postgres -d cw3 
+
+shp2pgsql.exe "C:\Users\Wojtek\Desktop\cw3\T2018_KAR_GERMANY\T2018_KAR_BUILDINGS.shp" buildings_2018 | psql -p 5432 -h localhost -U postgres -d cw3
+SELECT *
+
+select * from buildings_2019 b2019
+left join buildings_2018 b2018 on b2018.geom = b2019.geom 
+where b2018.gid is null
+
+# zad 2
+shp2pgsql.exe "C:\Users\Wojtek\Desktop\cw3\T2018_KAR_GERMANY\T2018_KAR_POI_TABLE.shp" poi_2018 | psql -p 5432 -h localhost -U postgres -d cw3
+
+shp2pgsql.exe "C:\Users\Wojtek\Desktop\cw3\T2019_KAR_GERMANY\T2019_KAR_POI_TABLE.shp" poi_2019 | psql -p 5432 -h localhost -U postgres -d cw3
+
+select b2019.* from buildings_2019 b2019
+left join buildings_2018 b2018 on b2018.geom = b2019.geom 
+where b2018.gid is null;
+
+create view new_points as
+select poi_2019.* from poi_2019
+left join poi_2018 on poi_2018.poi_id = poi_2019.poi_id 
+where poi_2018.gid is null;
+
+SELECT new_points.type, COUNT(new_points.gid) as ilosc
+FROM new_points
+CROSS JOIN changed_buildings cb
+where ST_Contains(ST_Buffer(cb.geom, 0.005), new_points.geom)
+GROUP BY new_points.type;
+
+# zad 3
+shp2pgsql.exe "C:\Users\Wojtek\Desktop\cw3\T2019_KAR_GERMANY\T2019_KAR_STREETS.shp" streets_2019 | psql -p 5432 -h localhost -U postgres -d cw3
+
+# Uklad DHDN.Berlin/Cassini - EPSG:3068
+create table streets_reprojected as
+select 
+    gid, 
+    link_id, 
+    st_name,
+	ref_in_id,
+	nref_in_id,
+	func_class,
+	speed_cat,
+	fr_speed_l,
+	to_speed_l,
+	dir_travel,
+	ST_Transform(ST_SetSRID(geom,4326), 3068) as geom
+from streets_2019;
+
+# zad 4
+
+create table input_points 
+(
+	name varchar(50),
+	geom geometry
+);
+
+insert into input_points values
+	('Point1', 'POINT(8.36093 49.03174)'),
+	('Point2', 'POINT(8.39876 49.00644)');
+	
+select * from input_points;
+
+# zad 5
+update input_points
+set geom = ST_Transform(ST_SetSRID(geom,4326), 3068);
+
+# zad 6
+shp2pgsql.exe "C:\Users\Wojtek\Desktop\cw3\T2019_KAR_GERMANY\T2019_KAR_STREET_NODE.shp" street_node_2019 | psql -p 5432 -h localhost -U postgres -d cw3
+
+create table street_node_2019_reprojected as
+select
+	gid,
+	node_id,
+	link_id,
+	point_num,
+	z_level,
+	'intersect',
+	lat,
+	lon,
+	ST_Transform(ST_SetSRID(geom,4326), 3068) as geom
+from street_node_2019;
+
+select * from street_node_2019_reprojected;
+
+create view points_line as
+select ST_MakeLine(geom) as geom
+from input_points;
+
+select * from points_line;
+
+select distinct node_id
+from points_line lp, street_node_2019_reprojected sn
+where st_contains(st_buffer(lp.geom, 0.002), sn.geom)
+
+# zad 7
+shp2pgsql.exe "C:\Users\Wojtek\Desktop\cw3\T2019_KAR_GERMANY\T2019_KAR_LAND_USE_A.shp" land_use_a_2019 | psql -p 5432 -h localhost -U postgres -d cw3
+
+select distinct
+    count(*)
+from poi_2019 sport_shops
+cross join land_use_a_2019 parks
+where parks.type like 'Park %' and sport_shops.type = 'Sporting Goods Store' and ST_Contains(ST_Buffer(parks.geom, 0.003), sport_shops.geom);
+
+
+# zad 8
+shp2pgsql.exe "C:\Users\Wojtek\Desktop\cw3\T2019_KAR_GERMANY\T2019_KAR_RAILWAYS.shp" railways_2019 | psql -p 5432 -h localhost -U postgres -d cw3
+
+shp2pgsql.exe "C:\Users\Wojtek\Desktop\cw3\T2019_KAR_GERMANY\T2019_KAR_WATER_LINES.shp" water_lines_2019 | psql -p 5432 -h localhost -U postgres -d cw3
+
+select distinct ST_Intersection(w.geom, r.geom) into T2019_KAR_BRIDGES
+from railways_2019 r
+cross join water_lines_2019 w
+where not st_isempty(ST_Intersection(w.geom, r.geom)) 
+
+select * from T2019_KAR_BRIDGES;
+
