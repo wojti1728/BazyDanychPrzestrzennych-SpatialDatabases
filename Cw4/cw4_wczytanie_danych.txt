@@ -1,0 +1,19 @@
+# wczytywanie danych
+shp2pgsql.exe -s 5070 "C:\Users\Wojtek\Desktop\cw4\qgis_sample_data\shapefiles\trees.shp" trees | psql -p 5432 -h localhost -U postgres -d cw4
+
+shp2pgsql.exe -s 5070 "C:\Users\Wojtek\Desktop\cw4\qgis_sample_data\shapefiles\railroads.shp" railroads | psql -p 5432 -h localhost -U postgres -d cw4
+
+shp2pgsql.exe -s 5070 "C:\Users\Wojtek\Desktop\cw4\qgis_sample_data\shapefiles\regions.shp" regions | psql -p 5432 -h localhost -U postgres -d cw4
+
+shp2pgsql.exe -s 5070 "C:\Users\Wojtek\Desktop\cw4\qgis_sample_data\shapefiles\airports.shp" airports | psql -p 5432 -h localhost -U postgres -d cw4
+
+shp2pgsql.exe -s 5070 "C:\Users\Wojtek\Desktop\cw4\qgis_sample_data\shapefiles\rivers.shp" rivers | psql -p 5432 -h localhost -U postgres -d cw4
+
+shp2pgsql.exe -s 5070 "C:\Users\Wojtek\Desktop\cw4\qgis_sample_data\shapefiles\majrivers.shp" majrivers | psql -p 5432 -h localhost -U postgres -d cw4
+
+shp2pgsql.exe -s 5070 "C:\Users\Wojtek\Desktop\cw4\qgis_sample_data\shapefiles\popp.shp" popp | psql -p 5432 -h localhost -U postgres -d cw4
+
+shp2pgsql.exe -s 5070 "C:\Users\Wojtek\Desktop\cw4\qgis_sample_data\shapefiles\swamp.shp" swamp | psql -p 5432 -h localhost -U postgres -d cw4
+
+
+
